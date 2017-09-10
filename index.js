@@ -45,7 +45,7 @@ app.post('/api/v1/notebooks', safe(async function (req, res) {
 app.listen(8080, function () { console.log('listening 8080') })
 
 function startJupyter (dir) {
-  shell.exec(`docker run -p 8888:8888 -v ${dir}:/home/jovyan/work jupyter/datascience-notebook start-notebook.sh --NotebookApp.token=''`, {async: true})
+  shell.exec(`docker run -p 8888:8888 -v ${dir}:/home/jovyan jupyter/datascience-notebook start-notebook.sh --NotebookApp.token=''`, {async: true})
 
   return function () {
     var id = shell.exec('docker ps -a -q --filter ancestor=jupyter/datascience-notebook --format="{{.ID}}"')
