@@ -11,34 +11,34 @@ const mkdirp = promisify(require('mkdirp'))
 
 const safe = fn => (req, res, next) => { Promise.resolve(fn(req, res, next)).catch(next) }
 
-var app = express()
-require('express-ws')(app)
-app.use(express.static('public'))
-app.use(bodyParser.json())
-
 const datStorage = path.join(shell.pwd().toString(), 'dats')
 const notebookStorage = path.join(shell.pwd().toString(), 'notebooks')
 
 const dats = {}
 
-app.post('/api/v1/dats', safe(async function (req, res) {
+var app = express()
+require('express-ws')(app)
+app.use(express.static('assets'))
+app.use(bodyParser.json())
+
+app.post('/api/dats', safe(async function (req, res) {
   // TODO: need to escape key
   var key = req.body.key
   dats[key] = await initDat(key)
   res.json({status: 'ok'})
 }))
 
-app.ws('/api/v1/data/:key/events', safe(async function (ws, req) {
+app.ws('/api/dats/:key/events', safe(async function (ws, req) {
   var bus = dats[req.params.key].bus
   bus.on('*', (event, data) => {
     ws.send({event, data})
   })
 }))
 
-app.post('/api/v1/notebooks', safe(async function (req, res) {
+app.post('/api/notebooks', safe(async function (req, res) {
   var key = req.body.key
   var file = req.body.file
-  await initNotebok(key, file)
+  await initNotebook(key, file)
   res.json({status: 'ok'})
 }))
 
@@ -64,7 +64,7 @@ async function initDat (key) {
 
   var network = dat.joinNetwork()
   network.on('listening', () => bus.emit('listening'))
-  network.on('connection', (conn, info) => bus.emit('connection', conn, info))
+  network.on('connection', (conn, info) => bus.emit('connection', info))
 
   var stat = dat.trackStats()
   stat.on('update', () => bus.emit('update', stat.get()))
@@ -77,7 +77,7 @@ async function initDat (key) {
   return {dat, bus}
 }
 
-async function initNotebok (key, file) {
+async function initNotebook (key, file) {
   var rs = dats[key].dat.archive.createReadStream(file)
   var to = path.join(notebookStorage, key)
   await mkdirp(to)
