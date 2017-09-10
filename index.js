@@ -44,14 +44,15 @@ app.post('/api/v1/notebooks', safe(async function (req, res) {
 
 app.listen(8080, function () { console.log('listening 8080') })
 
-function startJupyter (dir) {
-  shell.exec(`docker run -p 8888:8888 -v ${dir}:/home/jovyan jupyter/datascience-notebook start-notebook.sh --NotebookApp.token=''`, {async: true})
+function startJupyter (dir, key) {
+  var out = shell.exec(`docker run -d -p 8888:8888 -v ${dir}:/home/jovyan jupyter/datascience-notebook start-notebook.sh --NotebookApp.token=''`)
+  var jupyterID = out.stdout
+  dats[key].jupyterID = jupyterID
 
   return function () {
-    var id = shell.exec('docker ps -a -q --filter ancestor=jupyter/datascience-notebook --format="{{.ID}}"')
-    console.log('stopping', id.toString())
-    shell.exec(`docker stop ${id}`)
-    shell.exec(`docker rm ${id}`)
+    console.log('stopping', jupyterID)
+    shell.exec(`docker stop ${jupyterID}`, {silent: true})
+    shell.exec(`docker rm ${jupyterID}`, {silent: true})
   }
 }
 
@@ -82,9 +83,10 @@ async function initNotebok (key, file) {
   await mkdirp(to)
   await pump(rs, fs.createWriteStream(path.join(to, file)))
 
-  var stop = startJupyter(to)
-  process.on('SIGINT', function () {
+  var stop = startJupyter(to, key)
+  process.once('SIGINT', function () {
     console.log('exit')
     stop()
+    process.exit()
   })
 }
