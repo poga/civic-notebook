@@ -5,6 +5,9 @@
   "main": "index.js",
   "dependencies": {
     "body-parser": "^1.18.0",
+    "choo": "^6.0.0",
+    "choo-log": "^7.2.1",
+    "choo-reload": "^1.1.1",
     "dat-node": "^3.5.3",
     "es6-promisify": "^5.0.0",
     "express": "^4.15.4",
@@ -12,11 +15,16 @@
     "mkdirp": "^0.5.1",
     "nanobus": "^4.2.0",
     "pump": "^1.0.2",
-    "shelljs": "^0.7.8"
+    "shelljs": "^0.7.8",
+    "tachyons": "^4.8.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "bankai": "^9.0.0-1"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "bankai -dV app/index.js",
+    "build": "bankai build app/index.js"
   },
   "keywords": [],
   "author": "",
