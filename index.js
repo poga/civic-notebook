@@ -8,6 +8,8 @@ const nanobus = require('nanobus')
 const fs = require('fs')
 const pump = promisify(require('pump'))
 const mkdirp = promisify(require('mkdirp'))
+const encoding = require('dat-encoding')
+const cors = require('cors')
 
 const safe = fn => (req, res, next) => { Promise.resolve(fn(req, res, next)).catch(next) }
 
@@ -18,21 +20,18 @@ const dats = {}
 
 var app = express()
 require('express-ws')(app)
+app.use(cors())
 app.use(express.static('assets'))
 app.use(bodyParser.json())
 
-app.post('/api/dats', safe(async function (req, res) {
-  // TODO: need to escape key
-  var key = req.body.key
-  dats[key] = await initDat(key)
-  res.json({status: 'ok'})
-}))
-
 app.ws('/api/dats/:key/events', safe(async function (ws, req) {
-  var bus = dats[req.params.key].bus
-  bus.on('*', (event, data) => {
-    ws.send({event, data})
-  })
+  var key = encoding.decode(req.params.key).toString('hex')
+  if (!dats[key]) dats[key] = await initDat(key)
+
+  var archive = dats[key].dat.archive
+  let readdir = promisify(archive.readdir, archive)
+  var files = await readdir('/')
+  ws.send(JSON.stringify(files))
 }))
 
 app.post('/api/notebooks', safe(async function (req, res) {
@@ -42,7 +41,12 @@ app.post('/api/notebooks', safe(async function (req, res) {
   res.json({status: 'ok'})
 }))
 
-app.listen(8080, function () { console.log('listening 8080') })
+app.use(function (err, req, res, next) {
+  console.error(err)
+  res.json({error: err.message})
+})
+
+app.listen(3000, () => console.log('listening 3000'))
 
 function startJupyter (dir, key) {
   var out = shell.exec(`docker run -d -p 8888:8888 -v ${dir}:/home/jovyan jupyter/datascience-notebook start-notebook.sh --NotebookApp.token=''`)
@@ -62,17 +66,14 @@ async function initDat (key) {
   var dat = await Dat(p, {key, sparse: true})
   var bus = nanobus()
 
+  bus.on('*', console.log)
+
   var network = dat.joinNetwork()
   network.on('listening', () => bus.emit('listening'))
   network.on('connection', (conn, info) => bus.emit('connection', info))
 
   var stat = dat.trackStats()
-  stat.on('update', () => bus.emit('update', stat.get()))
-
-  dat.archive.readdir('/', (err, files) => {
-    if (err) return bus.emit('error', err)
-    bus.emit('index', files)
-  })
+  stat.on('update', () => bus.emit('stat', stat.get()))
 
   return {dat, bus}
 }

@@ -8,6 +8,8 @@
     "choo": "^6.0.0",
     "choo-log": "^7.2.1",
     "choo-reload": "^1.1.1",
+    "cors": "^2.8.4",
+    "dat-encoding": "^4.0.2",
     "dat-node": "^3.5.3",
     "es6-promisify": "^5.0.0",
     "express": "^4.15.4",
@@ -16,6 +18,7 @@
     "nanobus": "^4.2.0",
     "pump": "^1.0.2",
     "shelljs": "^0.7.8",
+    "superagent": "^3.6.0",
     "tachyons": "^4.8.1"
   },
   "devDependencies": {
@@ -26,7 +29,10 @@
     "dev": "bankai -dV app/index.js",
     "build": "bankai build app/index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "dat",
+    "jupyter"
+  ],
+  "author": "Poga Po<poga.po@gmail.com>",
+  "license": "MIT"
 }
