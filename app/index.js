@@ -1,4 +1,4 @@
-/*global WebSocket */
+/* eslint-env browser */
 const html = require('choo/html')
 const css = require('sheetify')
 const choo = require('choo')
