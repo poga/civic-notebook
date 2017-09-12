@@ -39,7 +39,7 @@ function mainView (state, emit) {
     </body>
   `
 
-  async function submit (e) {
+  function submit (e) {
     e.preventDefault()
     var key = document.querySelector('#archiveKey').value
     console.log(key)
@@ -63,7 +63,7 @@ function archiveView (state, emit) {
   `
 }
 
-async function archiveStore (state, emitter) {
+function archiveStore (state, emitter) {
   if (typeof window === 'undefined') return
   state.archive = null
 
