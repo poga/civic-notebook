@@ -29,9 +29,30 @@ app.ws('/api/dats/:key/events', safe(async function (ws, req) {
   if (!dats[key]) dats[key] = await initDat(key)
 
   var archive = dats[key].dat.archive
-  let readdir = promisify(archive.readdir, archive)
-  var files = await readdir('/')
-  ws.send(JSON.stringify(files))
+  ws.on('message', async msg => {
+    msg = JSON.parse(msg)
+    console.log(msg)
+    switch (msg.type) {
+      case 'readdir':
+        var result = await readdir(msg.params)
+
+        ws.send(JSON.stringify({type: 'readdir', result}))
+    }
+  })
+
+  async function readdir (root) {
+    let readdir = promisify(archive.readdir, archive)
+    let stat = promisify(archive.stat, archive)
+    var files = await readdir(root)
+    var ret = []
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i]
+
+      var st = await stat(path.join(root, f))
+      ret.push({name: f, isDir: st.isDirectory()})
+    }
+    return ret
+  }
 }))
 
 app.post('/api/notebooks', safe(async function (req, res) {

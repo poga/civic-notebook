@@ -5,6 +5,7 @@ const choo = require('choo')
 const log = require('choo-log')
 const reload = require('choo-reload')
 const request = require('superagent')
+const path = require('path')
 
 css('tachyons')
 
@@ -13,6 +14,7 @@ app.use(log())
 app.use(reload())
 app.route('/', mainView)
 app.route('/archives/:key', archiveView)
+app.route('/archives/:key/*', archiveView)
 app.use(archiveStore)
 
 if (!module.parent) {
@@ -49,35 +51,64 @@ function mainView (state, emit) {
 
 function archiveView (state, emit) {
   var key = state.params.key
-  if (!state.archive) emit('fetch-archive', key)
-  console.log('state', state)
+  var child = state.params.wildcard
+  if (!child) child = '/'
+  console.log(key, child)
+  if (!state.archive.root) {
+    emit('fetch-archive', key, child)
+  } else if (state.archive.root !== child) {
+    emit('readdir', child)
+  }
 
   return html`
     <body class="center tc">
       <div class="pa3 pa5-ns">
         <ul class="list pl0 center w-100 tl">
-          ${state.archive ? state.archive.map(listItem) : ''}
+          ${(state.archive && state.archive.files) ? state.archive.files.sort((x, y) => y.isDir - x.isDir).map(listItem) : ''}
         </ul>
       </div>
     </body>
   `
+  function listItem (f) {
+    return html`
+    <li class="pointer code lh-copy pl2 pv1 ba bl-0 bt-0 br-0 b--dotted b--black-30 ${f.isDir ? 'bg-black-05' : ''}" onclick=${onclick}>
+      <span class="mr2">${f.isDir ? '📁' : '📄'}</span>
+      ${f.name}
+    </li>
+  `
+
+    function onclick () {
+      var child = path.join(state.archive.root, f.name)
+      if (f.isDir) emit('pushState', `/archives/${key}/${child}`)
+    }
+  }
 }
 
 function archiveStore (state, emitter) {
   if (typeof window === 'undefined') return
-  state.archive = null
+  state.archive = {}
 
-  emitter.on('fetch-archive', key => {
+  emitter.on('fetch-archive', (key, child) => {
+    state.archive.root = '/'
     var ws = new WebSocket(`ws://localhost:3000/api/dats/${key}/events`)
+    ws.onopen = () => {
+      state.ws = ws
+      emitter.emit('readdir', '/')
+    }
     ws.onmessage = function (e) {
       console.log('websocket', e.data)
-      state.archive = JSON.parse(e.data)
-
+      var msg = JSON.parse(e.data)
+      switch (msg.type) {
+        case 'readdir':
+          state.archive.files = msg.result
+      }
       emitter.emit('render')
     }
   })
-}
 
-function listItem (name) {
-  return html`<li class="lh-copy pl2 pv1 ba bl-0 bt-0 br-0 b--dotted b--black-30">${name}</li>`
+  emitter.on('readdir', name => {
+    state.archive.root = name
+    state.ws.send(JSON.stringify({type: 'readdir', params: state.archive.root}))
+    emitter.emit('render')
+  })
 }

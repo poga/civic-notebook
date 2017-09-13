@@ -26,7 +26,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bankai -dV app/index.js",
+    "dev": "bankai -V app/index.js",
     "build": "bankai build app/index.js"
   },
   "keywords": [
