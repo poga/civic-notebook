@@ -44,7 +44,6 @@ function mainView (state, emit) {
   function submit (e) {
     e.preventDefault()
     var key = document.querySelector('#archiveKey').value
-    console.log(key)
     emit('pushState', `/archives/${key}`)
   }
 }
@@ -63,6 +62,7 @@ function archiveView (state, emit) {
   return html`
     <body class="center tc">
       <div class="pa3 pa5-ns">
+        <div class="pl2 w-100 tl">${state.archive.root}</div>
         <ul class="list pl0 center w-100 tl">
           ${(state.archive && state.archive.files) ? state.archive.files.sort((x, y) => y.isDir - x.isDir).map(listItem) : ''}
         </ul>
@@ -79,7 +79,11 @@ function archiveView (state, emit) {
 
     function onclick () {
       var child = path.join(state.archive.root, f.name)
-      if (f.isDir) emit('pushState', `/archives/${key}/${child}`)
+      if (f.isDir) {
+        emit('pushState', `/archives/${key}/${child}`)
+      } else {
+        emit('pushState', `/notebooks/${key}/${child}`)
+      }
     }
   }
 }
@@ -109,6 +113,5 @@ function archiveStore (state, emitter) {
   emitter.on('readdir', name => {
     state.archive.root = name
     state.ws.send(JSON.stringify({type: 'readdir', params: state.archive.root}))
-    emitter.emit('render')
   })
 }
