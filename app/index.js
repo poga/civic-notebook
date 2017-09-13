@@ -7,6 +7,8 @@ const reload = require('choo-reload')
 const request = require('superagent')
 const path = require('path')
 
+const API_HOST = 'http://localhost:3000'
+
 css('tachyons')
 
 var app = choo()
@@ -15,6 +17,7 @@ app.use(reload())
 app.route('/', mainView)
 app.route('/archives/:key', archiveView)
 app.route('/archives/:key/*', archiveView)
+
 app.use(archiveStore)
 
 if (!module.parent) {
@@ -53,6 +56,7 @@ function archiveView (state, emit) {
   var child = state.params.wildcard
   if (!child) child = '/'
   console.log(key, child)
+  console.log(state)
   if (!state.archive.root) {
     emit('fetch-archive', key, child)
   } else if (state.archive.root !== child) {
@@ -77,20 +81,23 @@ function archiveView (state, emit) {
     </li>
   `
 
-    function onclick () {
+    async function onclick () {
       var child = path.join(state.archive.root, f.name)
       if (f.isDir) {
         emit('pushState', `/archives/${key}/${child}`)
       } else {
-        emit('pushState', `/notebooks/${key}/${child}`)
+        var res = await request.post(`${API_HOST}/api/notebooks`).send({key, file: child})
+        console.log(res.body)
+        window.open('http://localhost:8888', '_blank')
       }
     }
   }
 }
 
 function archiveStore (state, emitter) {
-  if (typeof window === 'undefined') return
   state.archive = {}
+  if (typeof window === 'undefined') return
+  console.log('init archive store', state)
 
   emitter.on('fetch-archive', (key, child) => {
     state.archive.root = '/'
@@ -113,5 +120,9 @@ function archiveStore (state, emitter) {
   emitter.on('readdir', name => {
     state.archive.root = name
     state.ws.send(JSON.stringify({type: 'readdir', params: state.archive.root}))
+  })
+
+  emitter.on('close-archive', () => {
+    state.ws.close()
   })
 }

@@ -12,6 +12,7 @@ const encoding = require('dat-encoding')
 const cors = require('cors')
 
 const safe = fn => (req, res, next) => { Promise.resolve(fn(req, res, next)).catch(next) }
+const sleep = (n) => new Promise(resolve => setTimeout(resolve, n))
 
 const datStorage = path.join(shell.pwd().toString(), 'dats')
 const notebookStorage = path.join(shell.pwd().toString(), 'notebooks')
@@ -58,7 +59,11 @@ app.ws('/api/dats/:key/events', safe(async function (ws, req) {
 app.post('/api/notebooks', safe(async function (req, res) {
   var key = req.body.key
   var file = req.body.file
+  console.log(key, file)
+  if (!dats[key]) dats[key] = await initDat(key)
+
   await initNotebook(key, file)
+  await sleep(3000)
   res.json({status: 'ok'})
 }))
 
@@ -68,18 +73,6 @@ app.use(function (err, req, res, next) {
 })
 
 app.listen(3000, () => console.log('listening 3000'))
-
-function startJupyter (dir, key) {
-  var out = shell.exec(`docker run -d -p 8888:8888 -v ${dir}:/home/jovyan jupyter/datascience-notebook start-notebook.sh --NotebookApp.token=''`)
-  var jupyterID = out.stdout
-  dats[key].jupyterID = jupyterID
-
-  return function () {
-    console.log('stopping', jupyterID)
-    shell.exec(`docker stop ${jupyterID}`, {silent: true})
-    shell.exec(`docker rm ${jupyterID}`, {silent: true})
-  }
-}
 
 async function initDat (key) {
   var p = path.join(datStorage, key)
@@ -100,15 +93,29 @@ async function initDat (key) {
 }
 
 async function initNotebook (key, file) {
+  if (dats[key].notebook) return
   var rs = dats[key].dat.archive.createReadStream(file)
   var to = path.join(notebookStorage, key)
   await mkdirp(to)
   await pump(rs, fs.createWriteStream(path.join(to, file)))
 
   var stop = startJupyter(to, key)
+  dats[key].notebook = true
   process.once('SIGINT', function () {
     console.log('exit')
     stop()
     process.exit()
   })
+
+  function startJupyter (dir, key) {
+    var out = shell.exec(`docker run -d -p 8888:8888 -v ${dir}:/home/jovyan jupyter/datascience-notebook start-notebook.sh --NotebookApp.token=''`)
+    var jupyterID = out.stdout
+    dats[key].jupyterID = jupyterID
+
+    return function () {
+      console.log('stopping', jupyterID)
+      shell.exec(`docker stop ${jupyterID}`, {silent: true})
+      shell.exec(`docker rm ${jupyterID}`, {silent: true})
+    }
+  }
 }
