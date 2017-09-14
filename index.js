@@ -12,7 +12,7 @@ const encoding = require('dat-encoding')
 const cors = require('cors')
 
 const safe = fn => (req, res, next) => { Promise.resolve(fn(req, res, next)).catch(next) }
-const sleep = (n) => new Promise(resolve => setTimeout(resolve, n))
+const sleep = n => new Promise(resolve => setTimeout(resolve, n))
 
 const datStorage = path.join(shell.pwd().toString(), 'dats')
 const notebookStorage = path.join(shell.pwd().toString(), 'notebooks')
@@ -20,26 +20,18 @@ const notebookStorage = path.join(shell.pwd().toString(), 'notebooks')
 const dats = {}
 
 var app = express()
-require('express-ws')(app)
 app.use(cors())
 app.use(express.static('assets'))
 app.use(bodyParser.json())
 
-app.ws('/api/dats/:key/events', safe(async function (ws, req) {
+app.get('/api/dats/:key/*', safe(async function (req, res) {
   var key = encoding.decode(req.params.key).toString('hex')
   if (!dats[key]) dats[key] = await initDat(key)
 
   var archive = dats[key].dat.archive
-  ws.on('message', async msg => {
-    msg = JSON.parse(msg)
-    console.log(msg)
-    switch (msg.type) {
-      case 'readdir':
-        var result = await readdir(msg.params)
+  var result = await readdir(path.join('/', req.params[0]))
 
-        ws.send(JSON.stringify({type: 'readdir', result}))
-    }
-  })
+  res.json({result})
 
   async function readdir (root) {
     let readdir = promisify(archive.readdir, archive)

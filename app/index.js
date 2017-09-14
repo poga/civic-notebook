@@ -57,10 +57,8 @@ function archiveView (state, emit) {
   if (!child) child = '/'
   console.log(key, child)
   console.log(state)
-  if (!state.archive.root) {
-    emit('fetch-archive', key, child)
-  } else if (state.archive.root !== child) {
-    emit('readdir', child)
+  if (!state.archive.root || state.archive.root !== child) {
+    emit('readdir', {key, child})
   }
 
   return html`
@@ -99,30 +97,11 @@ function archiveStore (state, emitter) {
   if (typeof window === 'undefined') return
   console.log('init archive store', state)
 
-  emitter.on('fetch-archive', (key, child) => {
-    state.archive.root = '/'
-    var ws = new WebSocket(`ws://localhost:3000/api/dats/${key}/events`)
-    ws.onopen = () => {
-      state.ws = ws
-      emitter.emit('readdir', '/')
-    }
-    ws.onmessage = function (e) {
-      console.log('websocket', e.data)
-      var msg = JSON.parse(e.data)
-      switch (msg.type) {
-        case 'readdir':
-          state.archive.files = msg.result
-      }
-      emitter.emit('render')
-    }
-  })
-
-  emitter.on('readdir', name => {
-    state.archive.root = name
-    state.ws.send(JSON.stringify({type: 'readdir', params: state.archive.root}))
-  })
-
-  emitter.on('close-archive', () => {
-    state.ws.close()
+  emitter.on('readdir', async ({key, child}) => {
+    state.archive.root = child
+    var res = await request.get(`${API_HOST}/api/dats/${key}/${child}`)
+    console.log(res.body.result)
+    state.archive.files = res.body.result
+    emitter.emit('render')
   })
 }
