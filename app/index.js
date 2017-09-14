@@ -73,7 +73,7 @@ function archiveView (state, emit) {
   `
   function listItem (f) {
     return html`
-    <li class="pointer code lh-copy pl2 pv1 bl-0 bt-0 br-0 b--dotted b--black-30 ${f.isDir ? 'bg-black-05' : ''}" onclick=${onclick}>
+    <li class="pointer code lh-copy pl2 pv1 hover-yellow ${f.isDir ? 'bg-black-05' : ''}" onclick=${onclick}>
       <span class="mr2">${f.isDir ? '📁' : '📄'}</span>
       ${f.name}
     </li>
