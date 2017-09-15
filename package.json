@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "bankai": "^8.1.1",
     "body-parser": "^1.18.0",
+    "budo": "^10.0.4",
     "choo": "^6.0.0",
     "choo-log": "^7.2.1",
     "choo-reload": "^1.1.1",
@@ -17,13 +19,13 @@
     "mkdirp": "^0.5.1",
     "nanobus": "^4.2.0",
     "pump": "^1.0.2",
+    "sheetify": "^6.1.1",
     "shelljs": "^0.7.8",
     "superagent": "^3.6.0",
-    "tachyons": "^4.8.1"
+    "tachyons": "^4.8.1",
+    "unassertify": "^2.0.4"
   },
-  "devDependencies": {
-    "bankai": "^9.0.0-1"
-  },
+  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bankai -V app/index.js",

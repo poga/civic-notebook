@@ -79,14 +79,19 @@ function archiveView (state, emit) {
     </li>
   `
 
-    async function onclick () {
+    function onclick () {
       var child = path.join(state.archive.root, f.name)
       if (f.isDir) {
         emit('pushState', `/archives/${key}/${child}`)
       } else {
-        var res = await request.post(`${API_HOST}/api/notebooks`).send({key, file: child})
-        console.log(res.body)
-        window.open('http://localhost:8888', '_blank')
+        request
+          .post(`${API_HOST}/api/notebooks`)
+          .send({key, file: child})
+          .end((err, res) => {
+            if (err) throw err
+            console.log(res.body)
+            window.open('http://localhost:8888', '_blank')
+          })
       }
     }
   }
@@ -99,6 +104,7 @@ function archiveStore (state, emitter) {
 
   emitter.on('readdir', async ({key, child}) => {
     state.archive.root = child
+    state.archive.key = key
     var res = await request.get(`${API_HOST}/api/dats/${key}/${child}`)
     console.log(res.body.result)
     state.archive.files = res.body.result
