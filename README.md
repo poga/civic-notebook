@@ -11,6 +11,21 @@ Analyze civic data with jupyter notebook from decentralized data source.
 
 ## Usage
 
+#### Sharing Data
+
+Use [Dat](datproject.org)'s GUI application.
+
+![](./dat.png)
+
+You can also use [CLI interface](https://github.com/datproject/dat):
+
+![](./dat-cli.png)
+
+For hosting your data on a server, try [dathttpd](https://github.com/beakerbrowser/dathttpd) or [hypercored](https://github.com/mafintosh/hypercored).
+
+
+#### Using Data
+
 ```
 $ git clone git@github.com:poga/civic-notebook.git
 $ cd civic-notebook
