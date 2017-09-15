@@ -63,6 +63,7 @@ app.post('/api/notebooks', safe(async function (req, res) {
   if (!dats[key]) dats[key] = await initDat(key)
 
   await initNotebook(key, file)
+  // TODO: wait for docker
   await sleep(3000)
   res.json({status: 'ok'})
 }))
