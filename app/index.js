@@ -27,6 +27,8 @@ if (!module.parent) {
 }
 
 function mainView (state, emit) {
+  checkArchiveLoaded()
+
   return html`
     <body class="center tc vh-100 flex flex-column items-center justify-center">
       <header class="tc pv3-ns">
@@ -48,6 +50,18 @@ function mainView (state, emit) {
     e.preventDefault()
     var key = document.querySelector('#archiveKey').value
     emit('pushState', `/archives/${key}`)
+  }
+
+  function checkArchiveLoaded () {
+    request
+      .get(`${API_HOST}/api/dats`)
+      .end((err, res) => {
+        if (err) throw err
+
+        if (res.body.result) {
+          emit('pushState', `/archives/${res.body.result}`)
+        }
+      })
   }
 }
 

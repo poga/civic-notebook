@@ -24,6 +24,14 @@ app.use(cors())
 app.use(express.static('assets'))
 app.use(bodyParser.json())
 
+// For now we only support single dat archive per process.
+// client should use this API to know whether an archive is already loaded
+app.get('/api/dats', safe(async function (req, res) {
+  if (Object.keys(dats).length > 0) return res.json({result: Object.keys(dats)[0]})
+
+  res.json({result: false})
+}))
+
 app.get('/api/dats/:key/*', safe(async function (req, res) {
   var key = encoding.decode(req.params.key).toString('hex')
   if (!dats[key]) dats[key] = await initDat(key)
