@@ -1,6 +1,6 @@
 # civic-notebook
 
-Analyze civic data with jupyter notebook from decentralized data source.
+Analyze civic data with [jupyter notebook](https://jupyter.org/) from decentralized data source.
 
 ## Prerequisite
 
