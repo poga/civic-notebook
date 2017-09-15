@@ -21,7 +21,7 @@ You can also use [CLI interface](https://github.com/datproject/dat):
 
 ![](./dat-cli.png)
 
-For hosting your data on a server, try [dathttpd](https://github.com/beakerbrowser/dathttpd) or [hypercored](https://github.com/mafintosh/hypercored).
+For hosting your data on a server, try [hypercored](https://github.com/mafintosh/hypercored).
 
 
 #### Using Data
