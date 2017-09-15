@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "bankai": "^8.1.1",
+    "bankai": "^9.0.0-1",
     "body-parser": "^1.18.0",
     "budo": "^10.0.4",
     "choo": "^6.0.0",

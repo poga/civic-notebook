@@ -102,12 +102,16 @@ function archiveStore (state, emitter) {
   if (typeof window === 'undefined') return
   console.log('init archive store', state)
 
-  emitter.on('readdir', async ({key, child}) => {
+  emitter.on('readdir', ({key, child}) => {
     state.archive.root = child
     state.archive.key = key
-    var res = await request.get(`${API_HOST}/api/dats/${key}/${child}`)
-    console.log(res.body.result)
-    state.archive.files = res.body.result
-    emitter.emit('render')
+    request
+      .get(`${API_HOST}/api/dats/${key}/${child}`)
+      .end((err, res) => {
+        if (err) throw err
+        console.log(res.body.result)
+        state.archive.files = res.body.result
+        emitter.emit('render')
+      })
   })
 }
