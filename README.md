@@ -13,7 +13,7 @@ Analyze civic data with [jupyter notebook](https://jupyter.org/) from decentrali
 
 #### Sharing Data
 
-Use [Dat](datproject.org)'s GUI application.
+Use [Dat](//datproject.org)'s GUI application.
 
 ![](./dat.png)
 
